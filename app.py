@@ -4,7 +4,6 @@ import kagglehub
 import numpy as np
 import pandas as pd
 import plotly.express as px
-import plotly.figure_factory as ff
 import plotly.graph_objects as go
 import streamlit as st
 from sklearn.linear_model import LogisticRegression
@@ -26,7 +25,7 @@ st.set_page_config(
     layout="wide",
 )
 
-# Custom Styling: CreditVault Theme (Mint Green & Dark Navy Slate)
+# Custom Styling: Full Theme Integration (Mint Green & Dark Navy Slate)
 st.markdown(
     """
     <style>
@@ -39,34 +38,47 @@ st.markdown(
     
     /* Sidebar Custom Styling */
     section[data-testid="stSidebar"] {
-        background-color: #121721 !important;
+        background-color: #0E131F !important;
         border-right: 1px solid #1F2937 !important;
     }
 
-    /* Radio Buttons & Menu Styling in Sidebar */
-    div[data-testid="stSidebar"] label {
+    /* Target Radio Buttons Container in Sidebar */
+    div[data-testid="stSidebar"] div[data-testid="stRadioButton"] {
+        background-color: #121824;
+        padding: 16px;
+        border-radius: 12px;
+        border: 1px solid #233044;
+    }
+
+    /* Radio Button Text Labels */
+    div[data-testid="stSidebar"] div[data-testid="stRadioButton"] label {
         color: #8B98A5 !important;
         font-size: 15px !important;
         font-weight: 500 !important;
-    }
-    
-    div[data-testid="stSidebar"] div[role="radiogroup"] > label:hover {
-        color: #50E3C2 !important;
-    }
-    
-    /* Active Selected Radio Item */
-    div[data-testid="stSidebar"] div[role="radiogroup"] [aria-checked="true"] {
-        background-color: rgba(80, 227, 194, 0.1) !important;
-        border-left: 4px solid #50E3C2 !important;
-        border-radius: 4px;
-        padding-left: 8px;
+        transition: all 0.2s ease-in-out;
     }
 
-    div[data-testid="stSidebar"] div[role="radiogroup"] [aria-checked="true"] p {
+    /* Radio Button Hover Effect */
+    div[data-testid="stSidebar"] div[data-testid="stRadioButton"] label:hover {
+        color: #50E3C2 !important;
+    }
+
+    /* Active Selected Radio Item Label */
+    div[data-testid="stSidebar"] div[data-testid="stRadioButton"] label[aria-checked="true"] p {
         color: #50E3C2 !important;
         font-weight: 700 !important;
     }
+
+    /* Style the Radio Dot SVG to Match Mint Green Theme */
+    div[data-testid="stSidebar"] div[data-testid="stRadioButton"] div[role="radiogroup"] [aria-checked="true"] svg {
+        fill: #50E3C2 !important;
+    }
     
+    div[data-testid="stSidebar"] div[data-testid="stRadioButton"] div[role="radiogroup"] [aria-checked="true"] div {
+        border-color: #50E3C2 !important;
+        background-color: #50E3C2 !important;
+    }
+
     /* Typography Overrides */
     h1, h2, h3, h4, h5, h6 {
         color: #FFFFFF !important;
@@ -113,13 +125,13 @@ st.markdown(
     /* Metric Cards Styling */
     div[data-testid="stMetricValue"] {
         color: #FFFFFF !important;
-        font-size: 30px !important;
+        font-size: 26px !important;
         font-weight: 700 !important;
     }
     
     div[data-testid="stMetricLabel"] {
         color: #8B98A5 !important;
-        font-size: 13px !important;
+        font-size: 12px !important;
         text-transform: uppercase;
         letter-spacing: 0.5px;
     }
@@ -198,6 +210,8 @@ def load_data_and_train():
       X_balanced, y_balanced, test_size=0.3, random_state=42, stratify=y_balanced
   )
 
+  # Model Selection & Training
+  model_name = "Logistic Regression"
   model = LogisticRegression(max_iter=1000)
   model.fit(X_train, y_train)
 
@@ -214,6 +228,7 @@ def load_data_and_train():
   fpr, tpr, _ = roc_curve(y_test, y_prob)
 
   eval_metrics = {
+      "model_name": model_name,
       "accuracy": acc,
       "precision": prec,
       "recall": rec,
@@ -231,12 +246,17 @@ def load_data_and_train():
 with st.spinner("Initializing Intelligence Engine & Evaluation Suite..."):
   df, model, metrics = load_data_and_train()
 
-# Sidebar Navigation (4 Menu Items)
+# Sidebar Header & Navigation Menu
 st.sidebar.markdown(
-    "<h3 style='color:#50E3C2 !important; margin-bottom: 20px;'>🛡️ Fraud"
-    " Engine Menu</h3>",
+    """
+    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
+        <span style="font-size: 24px;">🛡️</span>
+        <h2 style="margin: 0; font-size: 20px; color: #FFFFFF !important;">Fraud Engine</h2>
+    </div>
+    """,
     unsafe_allow_html=True,
 )
+
 page = st.sidebar.radio(
     "Navigation Options:",
     [
@@ -250,7 +270,6 @@ page = st.sidebar.radio(
 # PAGE 1: EXECUTIVE ANALYTICS
 if page == "📊 Executive Analytics":
 
-  # HERO BANNER SECTION (Matches Screenshot 1)
   st.markdown(
       """
         <div class="hero-card">
@@ -273,7 +292,6 @@ if page == "📊 Executive Analytics":
       unsafe_allow_html=True,
   )
 
-  # DATASET METRICS SECTION (Matches Screenshot 2)
   st.markdown(
       "<div style='font-size: 12px; color: #8B98A5; text-transform: uppercase; font-weight: 600;'>01 / THE DATASET</div>",
       unsafe_allow_html=True,
@@ -330,7 +348,6 @@ if page == "📊 Executive Analytics":
 
   st.markdown("<br>", unsafe_allow_html=True)
 
-  # CLASS DISTRIBUTION DONUT CHART (Matches Screenshot 3)
   chart_col1, chart_col2 = st.columns(2)
 
   with chart_col1:
@@ -379,7 +396,6 @@ if page == "📊 Executive Analytics":
     )
     st.plotly_chart(fig_bar, use_container_width=True)
 
-  # MODEL INSIGHTS CARDS (Matches Screenshot 4 & 5)
   st.markdown("<br>", unsafe_allow_html=True)
   st.markdown(
       "<div style='font-size: 12px; color: #8B98A5; text-transform: uppercase; font-weight: 600;'>02 / ARCHITECTURE</div>",
@@ -406,10 +422,10 @@ if page == "📊 Executive Analytics":
 
   with info2:
     st.markdown(
-        """
+        f"""
             <div class="info-card">
                 <span class="badge-pill">THE APPROACH</span>
-                <h3 style="margin-top:10px;">Logistic Regression Classifier</h3>
+                <h3 style="margin-top:10px;">{metrics['model_name']} Classifier</h3>
                 <p style="color:#8B98A5; font-size:14px;">
                     Trained with random under-sampling on balanced transaction distributions for robust probability scoring.
                 </p>
@@ -551,17 +567,27 @@ elif page == "📈 Model Performance":
 
   st.markdown("<br>", unsafe_allow_html=True)
 
-  # Key Metric Cards
-  kpi1, kpi2, kpi3, kpi4, kpi5 = st.columns(5)
-  kpi1.metric("Accuracy Score", f"{metrics['accuracy']*100:.2f}%")
-  kpi2.metric("Precision", f"{metrics['precision']*100:.2f}%")
-  kpi3.metric("Recall (Sensitivity)", f"{metrics['recall']*100:.2f}%")
-  kpi4.metric("F1 Score", f"{metrics['f1']*100:.2f}%")
-  kpi5.metric("ROC AUC Value", f"{metrics['roc_auc']:.4f}")
+  # Model Used & Metric Summary Panel
+  kpi_model, kpi1, kpi2, kpi3, kpi4, kpi5 = st.columns(6)
+
+  with kpi_model:
+    st.markdown(
+        f'<div class="info-card"><div style="color:#8B98A5;font-size:11px;text-transform:uppercase;">MODEL USED</div><div style="font-size:15px; font-weight:700; color:#50E3C2; margin-top:4px;">{metrics["model_name"]}</div></div>',
+        unsafe_allow_html=True,
+    )
+  with kpi1:
+    st.metric("Accuracy", f"{metrics['accuracy']*100:.2f}%")
+  with kpi2:
+    st.metric("Precision", f"{metrics['precision']*100:.2f}%")
+  with kpi3:
+    st.metric("Recall", f"{metrics['recall']*100:.2f}%")
+  with kpi4:
+    st.metric("F1 Score", f"{metrics['f1']*100:.2f}%")
+  with kpi5:
+    st.metric("ROC AUC", f"{metrics['roc_auc']:.4f}")
 
   st.markdown("<br>", unsafe_allow_html=True)
 
-  # Visualizations: ROC Curve & Confusion Matrix
   col_roc, col_cm = st.columns(2)
 
   with col_roc:
@@ -572,7 +598,7 @@ elif page == "📈 Model Performance":
             x=metrics["fpr"],
             y=metrics["tpr"],
             mode="lines",
-            name=f"Logistic Regression (AUC = {metrics['roc_auc']:.3f})",
+            name=f"{metrics['model_name']} (AUC = {metrics['roc_auc']:.3f})",
             line=dict(color="#50E3C2", width=3),
         )
     )
@@ -601,17 +627,19 @@ elif page == "📈 Model Performance":
     x_labels = ["Predicted Legit", "Predicted Fraud"]
     y_labels = ["Actual Legit", "Actual Fraud"]
 
-    fig_cm = ff.create_annotated_heatmap(
+    fig_cm = px.imshow(
         z,
         x=x_labels,
         y=y_labels,
-        colorscale=[[0, "#161F30"], [1, "#50E3C2"]],
-        font_colors=["#FFFFFF", "#0B0E17"],
+        text_auto=True,
+        color_continuous_scale=[[0, "#161F30"], [1, "#50E3C2"]],
+        aspect="auto",
     )
     fig_cm.update_layout(
         template="plotly_dark",
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
+        coloraxis_showscale=False,
     )
     st.plotly_chart(fig_cm, use_container_width=True)
 
@@ -623,11 +651,12 @@ elif page == "📈 Model Performance":
 
   with spec_col1:
     st.markdown(
-        """
+        f"""
             <div class="info-card">
-                <span class="badge-pill">SPECIFICATIONS</span>
+                <span class="badge-pill">ACTIVE MODEL</span>
+                <h3 style="color:#50E3C2 !important; margin-top:8px;">{metrics['model_name']}</h3>
                 <ul style="color:#8B98A5; font-size:14px; margin-top:10px; line-height:1.8;">
-                    <li><b>Algorithm:</b> Logistic Regression (Scikit-Learn)</li>
+                    <li><b>Model Type:</b> Generalized Linear Model (Binary Classifier)</li>
                     <li><b>Max Iterations:</b> 1000</li>
                     <li><b>Resampling Method:</b> Random Under-Sampling</li>
                     <li><b>Test Split:</b> 30% Holdout Test Dataset</li>
