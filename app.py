@@ -14,6 +14,75 @@ st.set_page_config(
     layout="wide",
 )
 
+# Custom Styling: Green & Black Cyber Security Theme
+st.markdown(
+    """
+    <style>
+    /* Global Background and Text Color */
+    .stApp {
+        background-color: #0d1117;
+        color: #00FF66;
+    }
+    
+    /* Sidebar Styling */
+    section[data-testid="stSidebar"] {
+        background-color: #161b22 !important;
+        border-right: 1px solid #00FF66;
+    }
+    
+    /* Headers & Subheaders */
+    h1, h2, h3, h4, h5, h6, span {
+        color: #00FF66 !important;
+        font-family: 'Courier New', Courier, monospace;
+    }
+    
+    /* Cards / Metrics Styling */
+    div[data-testid="stMetricValue"] {
+        color: #00FF66 !important;
+        font-size: 28px !important;
+        font-weight: bold;
+    }
+    
+    div[data-testid="stMetricLabel"] {
+        color: #8b949e !important;
+    }
+
+    /* Buttons Styling */
+    .stButton>button {
+        background-color: #00FF66 !important;
+        color: #000000 !important;
+        font-weight: bold !important;
+        border-radius: 8px !important;
+        border: none !important;
+        transition: 0.3s;
+    }
+    
+    .stButton>button:hover {
+        background-color: #00CC52 !important;
+        box-shadow: 0px 0px 10px #00FF66;
+    }
+
+    /* Input Fields Styling */
+    input, select, div[data-baseweb="select"] {
+        background-color: #21262d !important;
+        color: #00FF66 !important;
+        border: 1px solid #00FF66 !important;
+    }
+    
+    /* Banner Image Container */
+    .banner-img {
+        width: 100%;
+        max-height: 250px;
+        object-fit: cover;
+        border-radius: 12px;
+        border: 2px solid #00FF66;
+        margin-bottom: 20px;
+    }
+    </style>
+""",
+    unsafe_allow_html=True,
+)
+
 
 # Load Dataset & Train Model
 @st.cache_resource
@@ -58,14 +127,22 @@ def load_data_and_train():
   return df, model
 
 
-with st.spinner("Initializing Fraud Detection Engine & Analytics..."):
+with st.spinner("Initializing Fraud Engine & Cyber Analytics..."):
   df, model = load_data_and_train()
 
-# Sidebar Navigation Menu
+# Sidebar Navigation
 st.sidebar.title("🛡️ Fraud Engine Menu")
 page = st.sidebar.radio(
     "Navigate to:",
     ["📊 Executive Analytics", "🚨 Real-Time Predictor", "📁 Batch CSV Scanner"],
+)
+
+# Credit Card Fraud Detection Banner Image
+st.markdown(
+    '<img'
+    ' src="https://images.unsplash.com/photo-1563013544-824ae1b704d3?q=80&w=1200&auto=format&fit=crop"'
+    ' class="banner-img">',
+    unsafe_allow_html=True,
 )
 
 # PAGE 1: EXECUTIVE ANALYTICS
@@ -98,7 +175,9 @@ if page == "📊 Executive Analytics":
         y="Fraud Count",
         color="Transaction Type",
         text_auto=True,
+        template="plotly_dark",
     )
+    fig1.update_traces(marker_color="#00FF66")
     st.plotly_chart(fig1, use_container_width=True)
 
   with chart_col2:
@@ -112,7 +191,8 @@ if page == "📊 Executive Analytics":
         values="Count",
         names="Status",
         hole=0.4,
-        color_discrete_sequence=["#2ecc71", "#e74c3c"],
+        color_discrete_sequence=["#00FF66", "#FF0055"],
+        template="plotly_dark",
     )
     st.plotly_chart(fig2, use_container_width=True)
 
@@ -124,6 +204,7 @@ if page == "📊 Executive Analytics":
       color="isFraud",
       labels={"isFraud": "Is Fraud (1=Yes, 0=No)", "amount": "Amount ($)"},
       log_y=True,
+      template="plotly_dark",
   )
   st.plotly_chart(fig3, use_container_width=True)
 
@@ -161,7 +242,7 @@ elif page == "🚨 Real-Time Predictor":
         "Receiver New Balance ($)", value=0.00, step=100.0
     )
 
-  if st.button("Evaluate Transaction Risk", type="primary"):
+  if st.button("Evaluate Transaction Risk"):
     type_num = type_map[transaction_type]
     input_data = np.array([[
         type_num,
