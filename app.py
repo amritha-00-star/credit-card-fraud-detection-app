@@ -112,13 +112,13 @@ st.markdown(
     /* Metric Cards Styling */
     div[data-testid="stMetricValue"] {
         color: #FFFFFF !important;
-        font-size: 26px !important;
+        font-size: 30px !important;
         font-weight: 700 !important;
     }
     
     div[data-testid="stMetricLabel"] {
         color: #8B98A5 !important;
-        font-size: 12px !important;
+        font-size: 13px !important;
         text-transform: uppercase;
         letter-spacing: 0.5px;
     }
@@ -197,8 +197,6 @@ def load_data_and_train():
       X_balanced, y_balanced, test_size=0.3, random_state=42, stratify=y_balanced
   )
 
-  # Model Selection & Training
-  model_name = "Logistic Regression"
   model = LogisticRegression(max_iter=1000)
   model.fit(X_train, y_train)
 
@@ -215,7 +213,6 @@ def load_data_and_train():
   fpr, tpr, _ = roc_curve(y_test, y_prob)
 
   eval_metrics = {
-      "model_name": model_name,
       "accuracy": acc,
       "precision": prec,
       "recall": rec,
@@ -404,10 +401,10 @@ if page == "📊 Executive Analytics":
 
   with info2:
     st.markdown(
-        f"""
+        """
             <div class="info-card">
                 <span class="badge-pill">THE APPROACH</span>
-                <h3 style="margin-top:10px;">{metrics['model_name']} Classifier</h3>
+                <h3 style="margin-top:10px;">Logistic Regression Classifier</h3>
                 <p style="color:#8B98A5; font-size:14px;">
                     Trained with random under-sampling on balanced transaction distributions for robust probability scoring.
                 </p>
@@ -549,24 +546,13 @@ elif page == "📈 Model Performance":
 
   st.markdown("<br>", unsafe_allow_html=True)
 
-  # Model Used & Metric Summary Panel
-  kpi_model, kpi1, kpi2, kpi3, kpi4, kpi5 = st.columns(6)
-  
-  with kpi_model:
-    st.markdown(
-        f'<div class="info-card"><div style="color:#8B98A5;font-size:11px;text-transform:uppercase;">MODEL USED</div><div style="font-size:16px; font-weight:700; color:#50E3C2; margin-top:4px;">{metrics["model_name"]}</div></div>',
-        unsafe_allow_html=True,
-    )
-  with kpi1:
-    st.metric("Accuracy", f"{metrics['accuracy']*100:.2f}%")
-  with kpi2:
-    st.metric("Precision", f"{metrics['precision']*100:.2f}%")
-  with kpi3:
-    st.metric("Recall", f"{metrics['recall']*100:.2f}%")
-  with kpi4:
-    st.metric("F1 Score", f"{metrics['f1']*100:.2f}%")
-  with kpi5:
-    st.metric("ROC AUC", f"{metrics['roc_auc']:.4f}")
+  # Key Metric Cards
+  kpi1, kpi2, kpi3, kpi4, kpi5 = st.columns(5)
+  kpi1.metric("Accuracy Score", f"{metrics['accuracy']*100:.2f}%")
+  kpi2.metric("Precision", f"{metrics['precision']*100:.2f}%")
+  kpi3.metric("Recall (Sensitivity)", f"{metrics['recall']*100:.2f}%")
+  kpi4.metric("F1 Score", f"{metrics['f1']*100:.2f}%")
+  kpi5.metric("ROC AUC Value", f"{metrics['roc_auc']:.4f}")
 
   st.markdown("<br>", unsafe_allow_html=True)
 
@@ -580,7 +566,7 @@ elif page == "📈 Model Performance":
             x=metrics["fpr"],
             y=metrics["tpr"],
             mode="lines",
-            name=f"{metrics['model_name']} (AUC = {metrics['roc_auc']:.3f})",
+            name=f"Logistic Regression (AUC = {metrics['roc_auc']:.3f})",
             line=dict(color="#50E3C2", width=3),
         )
     )
@@ -609,6 +595,7 @@ elif page == "📈 Model Performance":
     x_labels = ["Predicted Legit", "Predicted Fraud"]
     y_labels = ["Actual Legit", "Actual Fraud"]
 
+    # Replaced figure_factory with plotly express (px.imshow) to avoid scipy dependency
     fig_cm = px.imshow(
         z,
         x=x_labels,
@@ -633,12 +620,11 @@ elif page == "📈 Model Performance":
 
   with spec_col1:
     st.markdown(
-        f"""
+        """
             <div class="info-card">
-                <span class="badge-pill">ACTIVE MODEL</span>
-                <h3 style="color:#50E3C2 !important; margin-top:8px;">{metrics['model_name']}</h3>
+                <span class="badge-pill">SPECIFICATIONS</span>
                 <ul style="color:#8B98A5; font-size:14px; margin-top:10px; line-height:1.8;">
-                    <li><b>Model Type:</b> Generalized Linear Model (Binary Classifier)</li>
+                    <li><b>Algorithm:</b> Logistic Regression (Scikit-Learn)</li>
                     <li><b>Max Iterations:</b> 1000</li>
                     <li><b>Resampling Method:</b> Random Under-Sampling</li>
                     <li><b>Test Split:</b> 30% Holdout Test Dataset</li>
