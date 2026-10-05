@@ -1,3 +1,6 @@
+import glob
+import os
+import kagglehub
 import numpy as np
 import pandas as pd
 import plotly.express as px
@@ -15,49 +18,26 @@ from sklearn.metrics import (
 )
 from sklearn.model_selection import train_test_split
 
-# Streamlit Page Config
 st.set_page_config(
     page_title="Fraud Detection Engine", page_icon="🛡️", layout="wide"
 )
 
 
-# Generate robust fallback dataset or load local CSV safely
 @st.cache_resource
 def load_data_and_train():
+  # 1. Download/Load Data
   try:
-    if os.path.exists("data.csv"):
-      df = pd.read_csv("data.csv")
-    else:
-      # Generate lightweight dummy dataset to ensure the app ALWAYS loads
-      np.random.seed(42)
-      n_samples = 5000
-      types = np.random.choice(
-          ["PAYMENT", "TRANSFER", "CASH_OUT", "DEBIT", "CASH_IN"], size=n_samples
-      )
-      amounts = np.random.exponential(scale=1000, size=n_samples)
-      old_org = np.random.uniform(100, 50000, size=n_samples)
-      new_org = np.maximum(0, old_org - amounts)
-      old_dest = np.random.uniform(0, 50000, size=n_samples)
-      new_dest = old_dest + amounts
-
-      # Fraud rule simulation
-      is_fraud = (
-          (types == "TRANSFER") & (amounts > 10000) & (new_org == 0)
-      ).astype(int)
-
-      df = pd.DataFrame({
-          "type": types,
-          "amount": amounts,
-          "oldbalanceOrg": old_org,
-          "newbalanceOrig": new_org,
-          "oldbalanceDest": old_dest,
-          "newbalanceDest": new_dest,
-          "isFraud": is_fraud,
-      })
-  except Exception:
-    st.error("Error creating or reading dataset.")
+    path = kagglehub.dataset_download("ealaxi/paysim1")
+    csv_files = glob.glob(os.path.join(path, "*.csv"))
+    if not csv_files:
+      st.error("No CSV found in Kaggle download.")
+      st.stop()
+    df = pd.read_csv(csv_files[0])
+  except Exception as e:
+    st.error(f"Dataset load error: {e}")
     st.stop()
 
+  # 2. Map Categorical Column & Clean Missing Values
   type_map = {
       "PAYMENT": 0,
       "TRANSFER": 1,
@@ -65,7 +45,7 @@ def load_data_and_train():
       "DEBIT": 3,
       "CASH_IN": 4,
   }
-  df["type_num"] = df["type"].map(type_map)
+  df["type_num"] = df["type"].map(type_map).fillna(0)
 
   feature_cols = [
       "type_num",
@@ -76,63 +56,48 @@ def load_data_and_train():
       "newbalanceDest",
   ]
 
-  fraud = df[df.isFraud == 1]
-  legit = df[df.isFraud == 0]
+  # Drop any rows with NaN in critical columns
+  df_clean = df.dropna(subset=feature_cols + ["isFraud"]).copy()
 
-  # Balance dataset safely
-  if len(fraud) > 0:
-    legit_sample = legit.sample(
-        n=min(len(legit), max(len(fraud), 100)), random_state=42
-    )
-    balanced_df = pd.concat([legit_sample, fraud], axis=0)
-  else:
-    balanced_df = df
+  # 3. Create Balanced Sample
+  fraud = df_clean[df_clean.isFraud == 1]
+  legit = df_clean[df_clean.isFraud == 0].sample(n=len(fraud), random_state=42)
+  balanced_df = pd.concat([legit, fraud], axis=0)
 
-  X = balanced_df[feature_cols]
-  y = balanced_df["isFraud"]
+  X = balanced_df[feature_cols].astype(float)
+  y = balanced_df["isFraud"].astype(int)
 
+  # 4. Train/Test Split
   X_train, X_test, y_train, y_test = train_test_split(
-      X, y, test_size=0.3, random_state=42, stratify=y if len(fraud) > 1 else None
+      X, y, test_size=0.3, random_state=42, stratify=y
   )
 
+  # 5. Fit Model safely
   model = LogisticRegression(max_iter=1000)
   model.fit(X_train, y_train)
 
+  # 6. Evaluation Metrics
   y_pred = model.predict(X_test)
   y_prob = model.predict_proba(X_test)[:, 1]
 
   eval_metrics = {
       "accuracy": accuracy_score(y_test, y_pred),
-      "precision": precision_score(
-          y_test, y_pred, zero_division=0
-      ),
+      "precision": precision_score(y_test, y_pred, zero_division=0),
       "recall": recall_score(y_test, y_pred, zero_division=0),
       "f1": f1_score(y_test, y_pred, zero_division=0),
-      "roc_auc": (
-          roc_auc_score(y_test, y_prob) if len(np.unique(y_test)) > 1 else 1.0
-      ),
+      "roc_auc": roc_auc_score(y_test, y_prob),
       "cm": confusion_matrix(y_test, y_pred),
-      "fpr": (
-          roc_curve(y_test, y_prob)[0]
-          if len(np.unique(y_test)) > 1
-          else np.array([0, 1])
-      ),
-      "tpr": (
-          roc_curve(y_test, y_prob)[1]
-          if len(np.unique(y_test)) > 1
-          else np.array([0, 1])
-      ),
+      "fpr": roc_curve(y_test, y_prob)[0],
+      "tpr": roc_curve(y_test, y_prob)[1],
   }
 
-  return df, model, eval_metrics
+  return df_clean, model, eval_metrics
 
 
-import os
-
-with st.spinner("Initializing Dashboard..."):
+with st.spinner("Training model... Please wait."):
   df, model, metrics = load_data_and_train()
 
-# Sidebar Navigation
+# Navigation
 st.sidebar.title("🛡️ Fraud Engine")
 page = st.sidebar.radio(
     "Navigation Menu",
@@ -144,20 +109,19 @@ page = st.sidebar.radio(
     ],
 )
 
-# PAGE 1: OVERVIEW
 if page == "📊 Dashboard Overview":
   st.title("📊 Dashboard Overview")
 
   total_tx = len(df)
   total_fraud = int(df["isFraud"].sum())
   legit_count = total_tx - total_fraud
-  fraud_rate = (total_fraud / total_tx) * 100 if total_tx > 0 else 0
+  fraud_rate = (total_fraud / total_tx) * 100
 
   m1, m2, m3, m4 = st.columns(4)
   m1.metric("Total Transactions", f"{total_tx:,}")
   m2.metric("Legitimate", f"{legit_count:,}")
   m3.metric("Fraudulent", f"{total_fraud:,}")
-  m4.metric("Fraud Rate", f"{fraud_rate:.2f}%")
+  m4.metric("Fraud Rate", f"{fraud_rate:.3f}%")
 
   st.divider()
 
@@ -172,14 +136,13 @@ if page == "📊 Dashboard Overview":
     st.plotly_chart(fig_pie, use_container_width=True)
 
   with col2:
-    type_counts = df["type"].value_counts().reset_index()
-    type_counts.columns = ["Type", "Count"]
+    fraud_type = df[df["isFraud"] == 1]["type"].value_counts().reset_index()
+    fraud_type.columns = ["Type", "Count"]
     fig_bar = px.bar(
-        type_counts, x="Type", y="Count", title="Transactions by Type"
+        fraud_type, x="Type", y="Count", title="Fraud by Transaction Type"
     )
     st.plotly_chart(fig_bar, use_container_width=True)
 
-# PAGE 2: PREDICTOR
 elif page == "🚨 Real-Time Predictor":
   st.title("🚨 Real-Time Fraud Predictor")
 
@@ -201,9 +164,10 @@ elif page == "🚨 Real-Time Predictor":
     old_dest = st.number_input("Receiver Initial Balance", value=0.0)
     new_dest = st.number_input("Receiver New Balance", value=0.0)
 
-  if st.button("Evaluate"):
+  if st.button("Analyze Transaction"):
     input_data = np.array(
-        [[type_map[tx_type], amount, old_org, new_org, old_dest, new_dest]]
+        [[type_map[tx_type], amount, old_org, new_org, old_dest, new_dest]],
+        dtype=float,
     )
     pred = model.predict(input_data)[0]
     prob = model.predict_proba(input_data)[0][1]
@@ -214,24 +178,22 @@ elif page == "🚨 Real-Time Predictor":
     else:
       st.success(f"✅ LEGITIMATE TRANSACTION (Risk: {prob*100:.2f}%)")
 
-# PAGE 3: BATCH SCANNER
 elif page == "📁 Batch CSV Scanner":
   st.title("📁 Batch CSV Scanner")
-  uploaded_file = st.file_uploader("Upload CSV", type=["csv"])
+  uploaded_file = st.file_uploader("Upload CSV File", type=["csv"])
   if uploaded_file:
-    b_df = pd.read_csv(uploaded_file)
-    st.dataframe(b_df.head())
+    batch_df = pd.read_csv(uploaded_file)
+    st.dataframe(batch_df.head())
 
-# PAGE 4: PERFORMANCE & METRICS
 elif page == "📈 Model Performance":
-  st.title("📈 Model Performance & Metrics")
+  st.title("📈 Model Performance Metrics")
 
   m1, m2, m3, m4, m5 = st.columns(5)
-  m1.metric("Accuracy", f"{metrics['accuracy']*100:.1f}%")
-  m2.metric("Precision", f"{metrics['precision']*100:.1f}%")
-  m3.metric("Recall", f"{metrics['recall']*100:.1f}%")
-  m4.metric("F1 Score", f"{metrics['f1']*100:.1f}%")
-  m5.metric("ROC AUC", f"{metrics['roc_auc']:.3f}")
+  m1.metric("Accuracy", f"{metrics['accuracy']*100:.2f}%")
+  m2.metric("Precision", f"{metrics['precision']*100:.2f}%")
+  m3.metric("Recall", f"{metrics['recall']*100:.2f}%")
+  m4.metric("F1 Score", f"{metrics['f1']*100:.2f}%")
+  m5.metric("ROC AUC", f"{metrics['roc_auc']:.4f}")
 
   st.divider()
 
@@ -241,12 +203,7 @@ elif page == "📈 Model Performance":
     st.subheader("ROC Curve")
     fig_roc = go.Figure()
     fig_roc.add_trace(
-        go.Scatter(
-            x=metrics["fpr"],
-            y=metrics["tpr"],
-            mode="lines",
-            name="ROC",
-        )
+        go.Scatter(x=metrics["fpr"], y=metrics["tpr"], mode="lines", name="ROC")
     )
     fig_roc.add_trace(
         go.Scatter(
