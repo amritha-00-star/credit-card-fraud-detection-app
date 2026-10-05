@@ -25,7 +25,7 @@ st.set_page_config(
     layout="wide",
 )
 
-# Custom Styling: Full Theme Integration (Mint Green & Dark Navy Slate)
+# Custom Styling: CreditVault Theme (Mint Green & Dark Navy Slate)
 st.markdown(
     """
     <style>
@@ -38,45 +38,15 @@ st.markdown(
     
     /* Sidebar Custom Styling */
     section[data-testid="stSidebar"] {
-        background-color: #0E131F !important;
+        background-color: #121721 !important;
         border-right: 1px solid #1F2937 !important;
     }
 
-    /* Target Radio Buttons Container in Sidebar */
-    div[data-testid="stSidebar"] div[data-testid="stRadioButton"] {
-        background-color: #121824;
-        padding: 16px;
-        border-radius: 12px;
-        border: 1px solid #233044;
-    }
-
-    /* Radio Button Text Labels */
-    div[data-testid="stSidebar"] div[data-testid="stRadioButton"] label {
-        color: #8B98A5 !important;
+    /* Sidebar Radio Label Styling */
+    section[data-testid="stSidebar"] label {
+        color: #A0AEC0 !important;
         font-size: 15px !important;
         font-weight: 500 !important;
-        transition: all 0.2s ease-in-out;
-    }
-
-    /* Radio Button Hover Effect */
-    div[data-testid="stSidebar"] div[data-testid="stRadioButton"] label:hover {
-        color: #50E3C2 !important;
-    }
-
-    /* Active Selected Radio Item Label */
-    div[data-testid="stSidebar"] div[data-testid="stRadioButton"] label[aria-checked="true"] p {
-        color: #50E3C2 !important;
-        font-weight: 700 !important;
-    }
-
-    /* Style the Radio Dot SVG to Match Mint Green Theme */
-    div[data-testid="stSidebar"] div[data-testid="stRadioButton"] div[role="radiogroup"] [aria-checked="true"] svg {
-        fill: #50E3C2 !important;
-    }
-    
-    div[data-testid="stSidebar"] div[data-testid="stRadioButton"] div[role="radiogroup"] [aria-checked="true"] div {
-        border-color: #50E3C2 !important;
-        background-color: #50E3C2 !important;
     }
 
     /* Typography Overrides */
@@ -249,16 +219,16 @@ with st.spinner("Initializing Intelligence Engine & Evaluation Suite..."):
 # Sidebar Header & Navigation Menu
 st.sidebar.markdown(
     """
-    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px;">
-        <span style="font-size: 24px;">🛡️</span>
-        <h2 style="margin: 0; font-size: 20px; color: #FFFFFF !important;">Fraud Engine</h2>
+    <div style="padding: 10px 0px 20px 0px;">
+        <h2 style="color: #50E3C2 !important; font-size: 22px; margin: 0;">🛡️ Fraud Engine</h2>
+        <p style="color: #8B98A5; font-size: 13px; margin-top: 4px;">Navigation Control</p>
     </div>
     """,
     unsafe_allow_html=True,
 )
 
 page = st.sidebar.radio(
-    "Navigation Options:",
+    "Select Dashboard View:",
     [
         "📊 Executive Analytics",
         "🚨 Real-Time Predictor",
