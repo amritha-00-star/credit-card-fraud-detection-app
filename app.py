@@ -10,73 +10,109 @@ from sklearn.linear_model import LogisticRegression
 # Page Configuration
 st.set_page_config(
     page_title="Enterprise Fraud Intelligence Dashboard",
-    page_icon="🛡️",
+    page_icon="🛡️️",
     layout="wide",
 )
 
-# Custom Styling: Green & Black Cyber Security Theme
+# Custom Styling: CreditVault Modern UI Theme (Mint Green & Dark Navy Slate)
 st.markdown(
     """
     <style>
-    /* Global Background and Text Color */
+    /* Global App Background */
     .stApp {
-        background-color: #0d1117;
-        color: #00FF66;
+        background-color: #0B0E17 !important;
+        color: #E6EDF3 !important;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
     
-    /* Sidebar Styling */
+    /* Sidebar Custom Styling */
     section[data-testid="stSidebar"] {
-        background-color: #161b22 !important;
-        border-right: 1px solid #00FF66;
+        background-color: #121721 !important;
+        border-right: 1px solid #1F2937 !important;
     }
     
-    /* Headers & Subheaders */
-    h1, h2, h3, h4, h5, h6, span {
-        color: #00FF66 !important;
-        font-family: 'Courier New', Courier, monospace;
+    /* Typography Overrides */
+    h1, h2, h3, h4, h5, h6 {
+        color: #FFFFFF !important;
+        font-weight: 700 !important;
+        letter-spacing: -0.5px !important;
     }
     
-    /* Cards / Metrics Styling */
+    .mint-text {
+        color: #50E3C2 !important;
+    }
+
+    /* Modern Card Containers */
+    .hero-card {
+        background: linear-gradient(135deg, #131B2A 0%, #161F33 100%);
+        border: 1px solid #233044;
+        border-radius: 16px;
+        padding: 32px;
+        margin-bottom: 24px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    }
+
+    .info-card {
+        background-color: #161F30;
+        border: 1px solid #233044;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 16px;
+    }
+
+    /* Tag / Badge Pills */
+    .badge-pill {
+        display: inline-block;
+        background-color: #1C273A;
+        border: 1px solid #2A3B58;
+        color: #8B98A5;
+        font-size: 12px;
+        font-weight: 600;
+        padding: 4px 12px;
+        border-radius: 20px;
+        margin-right: 8px;
+        margin-bottom: 8px;
+    }
+
+    /* Metric Cards Styling */
     div[data-testid="stMetricValue"] {
-        color: #00FF66 !important;
-        font-size: 28px !important;
-        font-weight: bold;
+        color: #FFFFFF !important;
+        font-size: 32px !important;
+        font-weight: 700 !important;
     }
     
     div[data-testid="stMetricLabel"] {
-        color: #8b949e !important;
+        color: #8B98A5 !important;
+        font-size: 14px !important;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
     }
 
-    /* Buttons Styling */
+    /* Primary Buttons */
     .stButton>button {
-        background-color: #00FF66 !important;
-        color: #000000 !important;
-        font-weight: bold !important;
-        border-radius: 8px !important;
+        background-color: #50E3C2 !important;
+        color: #0B0E17 !important;
+        font-weight: 700 !important;
+        font-size: 16px !important;
+        border-radius: 10px !important;
         border: none !important;
-        transition: 0.3s;
+        padding: 12px 24px !important;
+        width: 100%;
+        transition: all 0.2s ease-in-out;
     }
     
     .stButton>button:hover {
-        background-color: #00CC52 !important;
-        box-shadow: 0px 0px 10px #00FF66;
+        background-color: #38C7A7 !important;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 15px rgba(80, 227, 194, 0.3);
     }
 
-    /* Input Fields Styling */
+    /* Input Controls */
     input, select, div[data-baseweb="select"] {
-        background-color: #21262d !important;
-        color: #00FF66 !important;
-        border: 1px solid #00FF66 !important;
-    }
-    
-    /* Banner Image Container */
-    .banner-img {
-        width: 100%;
-        max-height: 250px;
-        object-fit: cover;
-        border-radius: 12px;
-        border: 2px solid #00FF66;
-        margin-bottom: 20px;
+        background-color: #121824 !important;
+        color: #FFFFFF !important;
+        border: 1px solid #233044 !important;
+        border-radius: 8px !important;
     }
     </style>
 """,
@@ -127,91 +163,191 @@ def load_data_and_train():
   return df, model
 
 
-with st.spinner("Initializing Fraud Engine & Cyber Analytics..."):
+with st.spinner("Initializing Intelligence Engine..."):
   df, model = load_data_and_train()
 
 # Sidebar Navigation
-st.sidebar.title("🛡️ Fraud Engine Menu")
+st.sidebar.title("🛡️ Fraud Engine")
 page = st.sidebar.radio(
     "Navigate to:",
     ["📊 Executive Analytics", "🚨 Real-Time Predictor", "📁 Batch CSV Scanner"],
 )
 
-# Credit Card Fraud Detection Banner Image
-st.markdown(
-    '<img'
-    ' src="https://images.unsplash.com/photo-1563013544-824ae1b704d3?q=80&w=1200&auto=format&fit=crop"'
-    ' class="banner-img">',
-    unsafe_allow_html=True,
-)
-
 # PAGE 1: EXECUTIVE ANALYTICS
 if page == "📊 Executive Analytics":
-  st.title("📊 Financial Fraud Analytics Dashboard")
-  st.caption("Comprehensive risk insights across historical transaction data.")
 
-  col1, col2, col3, col4 = st.columns(4)
+  # HERO BANNER SECTION (Matches Screenshot 1)
+  st.markdown(
+      """
+        <div class="hero-card">
+            <div style="font-size: 12px; font-weight: 700; color: #50E3C2; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px;">
+                🟢 Credit Card Fraud Detection
+            </div>
+            <h1 style="font-size: 40px; margin-bottom: 8px; line-height: 1.2;">
+                Fraud signals.<br><span class="mint-text">Brought into focus.</span>
+            </h1>
+            <p style="color: #8B98A5; font-size: 16px; margin-bottom: 20px;">
+                Go beyond the spreadsheet. Explore transaction patterns, understand the model, and make every prediction clear.
+            </p>
+            <div>
+                <span class="badge-pill">6 Core Features</span>
+                <span class="badge-pill">Logistic Regression</span>
+                <span class="badge-pill">Kaggle PaySim Engine</span>
+            </div>
+        </div>
+    """,
+      unsafe_allow_html=True,
+  )
+
+  # DATASET METRICS SECTION (Matches Screenshot 2)
+  st.markdown(
+      "<div style='font-size: 12px; color: #8B98A5; text-transform: uppercase; font-weight: 600;'>01 / THE DATASET</div>",
+      unsafe_allow_html=True,
+  )
+  st.markdown(
+      "<h2 style='margin-bottom: 20px;'>The full picture, at a glance.</h2>",
+      unsafe_allow_html=True,
+  )
+
   total_tx = len(df)
   total_fraud = int(df["isFraud"].sum())
+  legit_count = total_tx - total_fraud
   fraud_rate = (total_fraud / total_tx) * 100
-  fraud_amount = df[df["isFraud"] == 1]["amount"].sum()
 
-  col1.metric("Total Transactions", f"{total_tx:,}")
-  col2.metric("Detected Fraud Cases", f"{total_fraud:,}")
-  col3.metric("Fraud Rate", f"{fraud_rate:.2f}%")
-  col4.metric("Total Monetary Loss", f"${fraud_amount:,.2f}")
+  m_col1, m_col2, m_col3, m_col4 = st.columns(4)
 
-  st.divider()
+  with m_col1:
+    st.markdown(
+        f'<div class="info-card"><div'
+        ' style="color:#8B98A5;font-size:12px;">Total'
+        ' transactions</div><div style="font-size:26px; font-weight:700;'
+        ' color:#FFF;">'
+        f"{total_tx:,}"
+        "</div></div>",
+        unsafe_allow_html=True,
+    )
+  with m_col2:
+    st.markdown(
+        f'<div class="info-card"><div'
+        ' style="color:#8B98A5;font-size:12px;">Legitimate</div><div'
+        ' style="font-size:26px; font-weight:700; color:#FFF;">'
+        f"{legit_count:,}"
+        "</div></div>",
+        unsafe_allow_html=True,
+    )
+  with m_col3:
+    st.markdown(
+        f'<div class="info-card"><div'
+        ' style="color:#8B98A5;font-size:12px;">Fraudulent</div><div'
+        ' style="font-size:26px; font-weight:700; color:#FFF;">'
+        f"{total_fraud:,}"
+        "</div></div>",
+        unsafe_allow_html=True,
+    )
+  with m_col4:
+    st.markdown(
+        f'<div class="info-card"><div'
+        ' style="color:#8B98A5;font-size:12px;">Fraud rate</div><div'
+        ' style="font-size:26px; font-weight:700; color:#50E3C2;">'
+        f"{fraud_rate:.3f}%"
+        "</div></div>",
+        unsafe_allow_html=True,
+    )
 
+  st.markdown("<br>", unsafe_allow_html=True)
+
+  # CLASS DISTRIBUTION DONUT CHART (Matches Screenshot 3)
   chart_col1, chart_col2 = st.columns(2)
 
   with chart_col1:
-    st.subheader("Fraud Distribution by Transaction Type")
-    fraud_type = df[df["isFraud"] == 1]["type"].value_counts().reset_index()
-    fraud_type.columns = ["Transaction Type", "Fraud Count"]
-    fig1 = px.bar(
-        fraud_type,
-        x="Transaction Type",
-        y="Fraud Count",
-        color="Transaction Type",
-        text_auto=True,
-        template="plotly_dark",
-    )
-    fig1.update_traces(marker_color="#00FF66")
-    st.plotly_chart(fig1, use_container_width=True)
-
-  with chart_col2:
-    st.subheader("Legitimate vs Fraud Volume Comparison")
+    st.subheader("Class Distribution")
     status_df = pd.DataFrame({
-        "Status": ["Legitimate", "Fraud"],
-        "Count": [total_tx - total_fraud, total_fraud],
+        "Status": ["Legitimate", "Fraudulent"],
+        "Count": [legit_count, total_fraud],
     })
-    fig2 = px.pie(
+    fig_donut = px.pie(
         status_df,
         values="Count",
         names="Status",
-        hole=0.4,
-        color_discrete_sequence=["#00FF66", "#FF0055"],
+        hole=0.65,
+        color_discrete_sequence=["#50E3C2", "#FF4D4D"],
         template="plotly_dark",
     )
-    st.plotly_chart(fig2, use_container_width=True)
+    fig_donut.update_layout(
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        showlegend=True,
+        annotations=[{
+            "text": f"<b>{fraud_rate:.3f}%</b><br><span"
+            ' style="font-size:12px;color:#8B98A5;">FRAUD RATE</span>',
+            "x": 0.5,
+            "y": 0.5,
+            "font_size": 22,
+            "showarrow": False,
+        }],
+    )
+    st.plotly_chart(fig_donut, use_container_width=True)
 
-  st.subheader("Transaction Amount Distribution (Fraud vs Legitimate)")
-  fig3 = px.box(
-      df.sample(20000, random_state=42),
-      x="isFraud",
-      y="amount",
-      color="isFraud",
-      labels={"isFraud": "Is Fraud (1=Yes, 0=No)", "amount": "Amount ($)"},
-      log_y=True,
-      template="plotly_dark",
+  with chart_col2:
+    st.subheader("Fraud Count by Type")
+    fraud_type = df[df["isFraud"] == 1]["type"].value_counts().reset_index()
+    fraud_type.columns = ["Transaction Type", "Fraud Count"]
+    fig_bar = px.bar(
+        fraud_type,
+        x="Transaction Type",
+        y="Fraud Count",
+        text_auto=True,
+        template="plotly_dark",
+    )
+    fig_bar.update_traces(marker_color="#50E3C2")
+    fig_bar.update_layout(
+        paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)"
+    )
+    st.plotly_chart(fig_bar, use_container_width=True)
+
+  # MODEL INSIGHTS CARDS (Matches Screenshot 4 & 5)
+  st.markdown("<br>", unsafe_allow_html=True)
+  st.markdown(
+      "<div style='font-size: 12px; color: #8B98A5; text-transform: uppercase; font-weight: 600;'>02 / ARCHITECTURE</div>",
+      unsafe_allow_html=True,
   )
-  st.plotly_chart(fig3, use_container_width=True)
+  st.markdown(
+      "<h2>Inside the classification model.</h2>", unsafe_allow_html=True
+  )
+
+  info1, info2 = st.columns(2)
+  with info1:
+    st.markdown(
+        """
+            <div class="info-card">
+                <span class="badge-pill">THE INPUT</span>
+                <h3 style="margin-top:10px;">6 Core Dimensions</h3>
+                <p style="color:#8B98A5; font-size:14px;">
+                    Transaction type, amount, sender balances, and recipient balances processed via numerical encoding.
+                </p>
+            </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+  with info2:
+    st.markdown(
+        """
+            <div class="info-card">
+                <span class="badge-pill">THE APPROACH</span>
+                <h3 style="margin-top:10px;">Logistic Regression Classifier</h3>
+                <p style="color:#8B98A5; font-size:14px;">
+                    Trained with random under-sampling on balanced transaction distributions for robust probability scoring.
+                </p>
+            </div>
+        """,
+        unsafe_allow_html=True,
+    )
 
 # PAGE 2: REAL-TIME PREDICTOR
 elif page == "🚨 Real-Time Predictor":
-  st.title("🚨 Single Transaction Classification")
-  st.caption("Submit specific parameters to detect real-time fraud risks.")
+  st.markdown("<h2>Score a Transaction</h2>", unsafe_allow_html=True)
+  st.caption("Submit custom parameters to compute real-time fraud scores.")
 
   type_options = ["PAYMENT", "TRANSFER", "CASH_OUT", "DEBIT", "CASH_IN"]
   type_map = {
@@ -242,7 +378,7 @@ elif page == "🚨 Real-Time Predictor":
         "Receiver New Balance ($)", value=0.00, step=100.0
     )
 
-  if st.button("Evaluate Transaction Risk"):
+  if st.button("Evaluate Fraud Probability"):
     type_num = type_map[transaction_type]
     input_data = np.array([[
         type_num,
@@ -256,7 +392,7 @@ elif page == "🚨 Real-Time Predictor":
     prediction = model.predict(input_data)[0]
     prob = model.predict_proba(input_data)[0][1]
 
-    st.divider()
+    st.markdown("<br>", unsafe_allow_html=True)
     res_c1, res_c2 = st.columns(2)
 
     with res_c1:
@@ -266,18 +402,18 @@ elif page == "🚨 Real-Time Predictor":
         st.success("✅ **Classification:** LEGITIMATE TRANSACTION")
 
     with res_c2:
-      st.metric("Fraud Probability", f"{prob * 100:.2f}%")
+      st.metric("Fraud Probability Score", f"{prob * 100:.2f}%")
 
 # PAGE 3: BATCH CSV SCANNER
 elif page == "📁 Batch CSV Scanner":
-  st.title("📁 Bulk Fraud File Analysis")
-  st.caption("Upload a CSV file of transactions for automated classification.")
+  st.markdown("<h2>Bulk Fraud File Analysis</h2>", unsafe_allow_html=True)
+  st.caption("Upload a CSV file of transactions for batch scoring.")
 
   uploaded_file = st.file_uploader("Upload CSV File", type=["csv"])
 
   if uploaded_file is not None:
     batch_df = pd.read_csv(uploaded_file)
-    st.write("### Preview Uploaded Data", batch_df.head())
+    st.write("### Preview Data", batch_df.head())
 
     required_cols = [
         "type",
@@ -289,7 +425,7 @@ elif page == "📁 Batch CSV Scanner":
     ]
 
     if all(col in batch_df.columns for col in required_cols):
-      if st.button("Run Batch Prediction"):
+      if st.button("Run Batch Scoring"):
         type_map = {
             "PAYMENT": 0,
             "TRANSFER": 1,
