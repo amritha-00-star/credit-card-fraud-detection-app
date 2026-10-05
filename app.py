@@ -18,13 +18,11 @@ from sklearn.metrics import (
 )
 from sklearn.model_selection import train_test_split
 
-# Streamlit Page Config
 st.set_page_config(
     page_title="Fraud Detection Engine", page_icon="🛡️", layout="wide"
 )
 
 
-# Load Kaggle Dataset & Train Model
 @st.cache_resource
 def load_data_and_train():
   try:
@@ -38,7 +36,6 @@ def load_data_and_train():
     st.error(f"Error downloading or loading dataset: {e}")
     st.stop()
 
-  # Map categorical transaction types to numeric values
   type_map = {
       "PAYMENT": 0,
       "TRANSFER": 1,
@@ -57,7 +54,6 @@ def load_data_and_train():
       "newbalanceDest",
   ]
 
-  # Balance the dataset (1:1 ratio for training)
   fraud = df[df.isFraud == 1]
   legit = df[df.isFraud == 0].sample(n=len(fraud), random_state=42)
   balanced_df = pd.concat([legit, fraud], axis=0)
@@ -65,16 +61,13 @@ def load_data_and_train():
   X = balanced_df[feature_cols]
   y = balanced_df["isFraud"]
 
-  # Train-Test Split (70/30)
   X_train, X_test, y_train, y_test = train_test_split(
       X, y, test_size=0.3, random_state=42, stratify=y
   )
 
-  # Train Model
   model = LogisticRegression(max_iter=1000)
   model.fit(X_train, y_train)
 
-  # Model Performance Metrics
   y_pred = model.predict(X_test)
   y_prob = model.predict_proba(X_test)[:, 1]
 
@@ -104,7 +97,6 @@ def load_data_and_train():
 with st.spinner("Loading Fraud Detection Engine..."):
   df, model, metrics = load_data_and_train()
 
-# Sidebar Navigation Menu
 st.sidebar.title("🛡️ Fraud Engine")
 page = st.sidebar.radio(
     "Navigation Menu",
@@ -116,9 +108,6 @@ page = st.sidebar.radio(
     ],
 )
 
-# ---------------------------------------------------------
-# PAGE 1: DASHBOARD OVERVIEW
-# ---------------------------------------------------------
 if page == "📊 Dashboard Overview":
   st.title("📊 Dashboard Overview")
 
@@ -156,9 +145,6 @@ if page == "📊 Dashboard Overview":
     )
     st.plotly_chart(fig_bar, use_container_width=True)
 
-# ---------------------------------------------------------
-# PAGE 2: REAL-TIME PREDICTOR
-# ---------------------------------------------------------
 elif page == "🚨 Real-Time Predictor":
   st.title("🚨 Real-Time Fraud Predictor")
   st.caption("Enter transaction details below to get an instant prediction.")
@@ -204,9 +190,6 @@ elif page == "🚨 Real-Time Predictor":
           f"✅ **Result: LEGITIMATE TRANSACTION** (Risk Score: {prob*100:.2f}%)"
       )
 
-# ---------------------------------------------------------
-# PAGE 3: BATCH CSV SCANNER
-# ---------------------------------------------------------
 elif page == "📁 Batch CSV Scanner":
   st.title("📁 Batch CSV Scanner")
   st.caption("Upload a CSV file containing transaction data.")
@@ -252,9 +235,6 @@ elif page == "📁 Batch CSV Scanner":
     else:
       st.error(f"File must contain the columns: {required_cols}")
 
-# ---------------------------------------------------------
-# PAGE 4: MODEL PERFORMANCE & EVALUATION METRICS
-# ---------------------------------------------------------
 elif page == "📈 Model Performance":
   st.title("📈 Model Performance & Evaluation")
   st.caption(
@@ -264,7 +244,6 @@ elif page == "📈 Model Performance":
 
   st.divider()
 
-  # 1. Summary Metrics
   m1, m2, m3, m4, m5 = st.columns(5)
   m1.metric("Accuracy", f"{metrics['accuracy']*100:.2f}%")
   m2.metric("Precision", f"{metrics['precision']*100:.2f}%")
@@ -276,7 +255,6 @@ elif page == "📈 Model Performance":
 
   col_roc, col_cm = st.columns(2)
 
-  # 2. ROC AUC Curve
   with col_roc:
     st.subheader("ROC-AUC Curve")
     fig_roc = go.Figure()
@@ -298,12 +276,10 @@ elif page == "📈 Model Performance":
         )
     )
     fig_roc.update_layout(
-        xaxis_title="False Positive Rate",
-        yaxis_title="True Positive Rate",
+        xaxis_title="False Positive Rate", yaxis_title="True Positive Rate"
     )
     st.plotly_chart(fig_roc, use_container_width=True)
 
-  # 3. Confusion Matrix
   with col_cm:
     st.subheader("Confusion Matrix")
     fig_cm = px.imshow(
