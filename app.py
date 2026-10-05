@@ -4,17 +4,29 @@ import kagglehub
 import numpy as np
 import pandas as pd
 import plotly.express as px
+import plotly.figure_factory as ff
+import plotly.graph_objects as go
 import streamlit as st
 from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import (
+    accuracy_score,
+    confusion_matrix,
+    f1_score,
+    precision_score,
+    recall_score,
+    roc_auc_score,
+    roc_curve,
+)
+from sklearn.model_selection import train_test_split
 
 # Page Configuration
 st.set_page_config(
     page_title="Enterprise Fraud Intelligence Dashboard",
-    page_icon="🛡️️",
+    page_icon="🛡️",
     layout="wide",
 )
 
-# Custom Styling: CreditVault Modern UI Theme (Mint Green & Dark Navy Slate)
+# Custom Styling: CreditVault Theme (Mint Green & Dark Navy Slate)
 st.markdown(
     """
     <style>
@@ -29,6 +41,30 @@ st.markdown(
     section[data-testid="stSidebar"] {
         background-color: #121721 !important;
         border-right: 1px solid #1F2937 !important;
+    }
+
+    /* Radio Buttons & Menu Styling in Sidebar */
+    div[data-testid="stSidebar"] label {
+        color: #8B98A5 !important;
+        font-size: 15px !important;
+        font-weight: 500 !important;
+    }
+    
+    div[data-testid="stSidebar"] div[role="radiogroup"] > label:hover {
+        color: #50E3C2 !important;
+    }
+    
+    /* Active Selected Radio Item */
+    div[data-testid="stSidebar"] div[role="radiogroup"] [aria-checked="true"] {
+        background-color: rgba(80, 227, 194, 0.1) !important;
+        border-left: 4px solid #50E3C2 !important;
+        border-radius: 4px;
+        padding-left: 8px;
+    }
+
+    div[data-testid="stSidebar"] div[role="radiogroup"] [aria-checked="true"] p {
+        color: #50E3C2 !important;
+        font-weight: 700 !important;
     }
     
     /* Typography Overrides */
@@ -77,13 +113,13 @@ st.markdown(
     /* Metric Cards Styling */
     div[data-testid="stMetricValue"] {
         color: #FFFFFF !important;
-        font-size: 32px !important;
+        font-size: 30px !important;
         font-weight: 700 !important;
     }
     
     div[data-testid="stMetricLabel"] {
         color: #8B98A5 !important;
-        font-size: 14px !important;
+        font-size: 13px !important;
         text-transform: uppercase;
         letter-spacing: 0.5px;
     }
@@ -120,7 +156,7 @@ st.markdown(
 )
 
 
-# Load Dataset & Train Model
+# Load Dataset, Train Model & Compute Evaluation Metrics
 @st.cache_resource
 def load_data_and_train():
   path = kagglehub.dataset_download("ealaxi/paysim1")
@@ -157,20 +193,58 @@ def load_data_and_train():
   X_balanced = balanced_df[feature_cols]
   y_balanced = balanced_df["isFraud"]
 
+  # Train / Test Split for Model Evaluation
+  X_train, X_test, y_train, y_test = train_test_split(
+      X_balanced, y_balanced, test_size=0.3, random_state=42, stratify=y_balanced
+  )
+
   model = LogisticRegression(max_iter=1000)
-  model.fit(X_balanced, y_balanced)
+  model.fit(X_train, y_train)
 
-  return df, model
+  # Evaluation Scores
+  y_pred = model.predict(X_test)
+  y_prob = model.predict_proba(X_test)[:, 1]
+
+  acc = accuracy_score(y_test, y_pred)
+  prec = precision_score(y_test, y_pred)
+  rec = recall_score(y_test, y_pred)
+  f1 = f1_score(y_test, y_pred)
+  roc_auc = roc_auc_score(y_test, y_prob)
+  cm = confusion_matrix(y_test, y_pred)
+  fpr, tpr, _ = roc_curve(y_test, y_prob)
+
+  eval_metrics = {
+      "accuracy": acc,
+      "precision": prec,
+      "recall": rec,
+      "f1": f1,
+      "roc_auc": roc_auc,
+      "cm": cm,
+      "fpr": fpr,
+      "tpr": tpr,
+      "feature_cols": feature_cols,
+  }
+
+  return df, model, eval_metrics
 
 
-with st.spinner("Initializing Intelligence Engine..."):
-  df, model = load_data_and_train()
+with st.spinner("Initializing Intelligence Engine & Evaluation Suite..."):
+  df, model, metrics = load_data_and_train()
 
-# Sidebar Navigation
-st.sidebar.title("🛡️ Fraud Engine")
+# Sidebar Navigation (4 Menu Items)
+st.sidebar.markdown(
+    "<h3 style='color:#50E3C2 !important; margin-bottom: 20px;'>🛡️ Fraud"
+    " Engine Menu</h3>",
+    unsafe_allow_html=True,
+)
 page = st.sidebar.radio(
-    "Navigate to:",
-    ["📊 Executive Analytics", "🚨 Real-Time Predictor", "📁 Batch CSV Scanner"],
+    "Navigation Options:",
+    [
+        "📊 Executive Analytics",
+        "🚨 Real-Time Predictor",
+        "📁 Batch CSV Scanner",
+        "📈 Model Performance",
+    ],
 )
 
 # PAGE 1: EXECUTIVE ANALYTICS
@@ -461,3 +535,124 @@ elif page == "📁 Batch CSV Scanner":
         )
     else:
       st.error(f"CSV must contain the following columns: {required_cols}")
+
+# PAGE 4: MODEL PERFORMANCE & EVALUATION METRICS
+elif page == "📈 Model Performance":
+  st.markdown(
+      "<div style='font-size: 12px; color: #8B98A5; text-transform: uppercase; font-weight: 600;'>03 / EVALUATION METRICS</div>",
+      unsafe_allow_html=True,
+  )
+  st.markdown(
+      "<h2>Model Performance & Diagnostic Suite</h2>", unsafe_allow_html=True
+  )
+  st.caption(
+      "Detailed classification metrics, confusion matrix, and ROC-AUC curve computed on holdout test set."
+  )
+
+  st.markdown("<br>", unsafe_allow_html=True)
+
+  # Key Metric Cards
+  kpi1, kpi2, kpi3, kpi4, kpi5 = st.columns(5)
+  kpi1.metric("Accuracy Score", f"{metrics['accuracy']*100:.2f}%")
+  kpi2.metric("Precision", f"{metrics['precision']*100:.2f}%")
+  kpi3.metric("Recall (Sensitivity)", f"{metrics['recall']*100:.2f}%")
+  kpi4.metric("F1 Score", f"{metrics['f1']*100:.2f}%")
+  kpi5.metric("ROC AUC Value", f"{metrics['roc_auc']:.4f}")
+
+  st.markdown("<br>", unsafe_allow_html=True)
+
+  # Visualizations: ROC Curve & Confusion Matrix
+  col_roc, col_cm = st.columns(2)
+
+  with col_roc:
+    st.subheader("ROC-AUC Curve")
+    fig_roc = go.Figure()
+    fig_roc.add_trace(
+        go.Scatter(
+            x=metrics["fpr"],
+            y=metrics["tpr"],
+            mode="lines",
+            name=f"Logistic Regression (AUC = {metrics['roc_auc']:.3f})",
+            line=dict(color="#50E3C2", width=3),
+        )
+    )
+    fig_roc.add_trace(
+        go.Scatter(
+            x=[0, 1],
+            y=[0, 1],
+            mode="lines",
+            name="Random Baseline",
+            line=dict(color="#FF4D4D", dash="dash"),
+        )
+    )
+    fig_roc.update_layout(
+        xaxis_title="False Positive Rate",
+        yaxis_title="True Positive Rate",
+        template="plotly_dark",
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        legend=dict(x=0.4, y=0.1),
+    )
+    st.plotly_chart(fig_roc, use_container_width=True)
+
+  with col_cm:
+    st.subheader("Confusion Matrix")
+    z = metrics["cm"]
+    x_labels = ["Predicted Legit", "Predicted Fraud"]
+    y_labels = ["Actual Legit", "Actual Fraud"]
+
+    fig_cm = ff.create_annotated_heatmap(
+        z,
+        x=x_labels,
+        y=y_labels,
+        colorscale=[[0, "#161F30"], [1, "#50E3C2"]],
+        font_colors=["#FFFFFF", "#0B0E17"],
+    )
+    fig_cm.update_layout(
+        template="plotly_dark",
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+    )
+    st.plotly_chart(fig_cm, use_container_width=True)
+
+  # Model Specifications & Feature Coefficients
+  st.markdown("<br>", unsafe_allow_html=True)
+  st.markdown("<h3>Model Parameters & Feature Weights</h3>", unsafe_allow_html=True)
+
+  spec_col1, spec_col2 = st.columns(2)
+
+  with spec_col1:
+    st.markdown(
+        """
+            <div class="info-card">
+                <span class="badge-pill">SPECIFICATIONS</span>
+                <ul style="color:#8B98A5; font-size:14px; margin-top:10px; line-height:1.8;">
+                    <li><b>Algorithm:</b> Logistic Regression (Scikit-Learn)</li>
+                    <li><b>Max Iterations:</b> 1000</li>
+                    <li><b>Resampling Method:</b> Random Under-Sampling</li>
+                    <li><b>Test Split:</b> 30% Holdout Test Dataset</li>
+                </ul>
+            </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+  with spec_col2:
+    coefficients = model.coef_[0]
+    coef_df = pd.DataFrame(
+        {"Feature": metrics["feature_cols"], "Coefficient": coefficients}
+    ).sort_values(by="Coefficient", ascending=True)
+
+    fig_coef = px.bar(
+        coef_df,
+        x="Coefficient",
+        y="Feature",
+        orientation="h",
+        title="Feature Coefficients (Impact on Fraud Probability)",
+        template="plotly_dark",
+    )
+    fig_coef.update_traces(marker_color="#50E3C2")
+    fig_coef.update_layout(
+        paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)"
+    )
+    st.plotly_chart(fig_coef, use_container_width=True)
